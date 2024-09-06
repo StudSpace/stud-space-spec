@@ -84,9 +84,9 @@ components:
           format: int64
           example: 2
         owner:
-          type: integer
-          format: int64
-          example: 151
+          type: string
+          format: uuid
+          example: 'aa970296-ba24-4087-b312-3ad4f2c7131f'
         name:
           type: string
           example: 'Math'
@@ -100,19 +100,13 @@ components:
         - description
       additionalProperties: false
 
-    ChannelList:
-      type: array
-      maxItems: 255
-      items:
-        $ref: '#/components/schemas/Channel'
-
-    ChannelDesc:
+    NewChannel:
       type: object
       properties:
         owner:
-          type: integer
-          format: int64
-          example: 141
+          type: string
+          format: uuid
+          example: 'aa970296-ba24-4087-b312-3ad4f2c7131f'
         name:
           type: string
           example: 'Math'
@@ -121,7 +115,7 @@ components:
           example: 'Math subject for current year'
         banner:
           type: string
-          description: Base54 encoded banner image
+          description: Base64 encoded banner image
       required:
         - owner
         - name
@@ -142,9 +136,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 2
+          type: string
+          format: uuid
+          example: 'aa970296-ba24-4087-b312-3ad4f2c7131f'
         time_joined:
           type: string
           format: date-time
@@ -185,13 +179,7 @@ components:
         - username
       additionalProperties: false
 
-    UserList:
-      type: array
-      maxItems: 255
-      items:
-        $ref: '#/components/schemas/User'
-
-    UserDesc:
+    NewUser:
       type: object
       properties:
         role:
@@ -240,6 +228,7 @@ security:
 paths:
   /channels:
     get:
+      operationId: getChannels
       description: Returns a list of all channels
       security:
         - OAuth2: [read_assigned, read_other]
@@ -249,7 +238,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChannelList"
+                type: array
+                maxItems: 255
+                items:
+                  $ref: '#/components/schemas/Channel'
         '401': 
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -257,6 +249,7 @@ paths:
         default:
           $ref: '#/components/responses/Unknown'
     post:
+      operationId: addChannel
       description: Add a new channel
       security:
         - OAuth2: [write_other]
@@ -265,7 +258,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChannelDesc'
+              $ref: '#/components/schemas/NewChannel'
       responses:
         '200':
           description: Channel successfully created
@@ -280,6 +273,7 @@ paths:
   
   /channels/{channelId}:
     get:
+      operationId: getChannel
       description: Get channel information
       security:
         - OAuth2: [read_assigned]
@@ -310,6 +304,7 @@ paths:
   
   /channels/{channelId}/banner:
     get:
+      operationId: getChannelBanner
       description: Get channel banner image
       security:
         - OAuth2: [read_assigned]
@@ -340,6 +335,7 @@ paths:
 
   /users:
     get:
+      operationId: getUsers
       description: Returns a list of all users
       security:
         - OAuth2: [read_assigned, read_other]
@@ -349,7 +345,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserList"
+                type: array
+                maxItems: 255
+                items:
+                  $ref: "#/components/schemas/User"
         '401': 
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -357,6 +356,7 @@ paths:
         default:
           $ref: '#/components/responses/Unknown'
     post:
+      operationId: addUser
       description: Add a new user
       security:
         - OAuth2: [create_users]
@@ -365,7 +365,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserDesc'
+              $ref: '#/components/schemas/NewUser'
       responses:
         '200':
           description: User successfully created
@@ -380,6 +380,7 @@ paths:
 
   /users/{userID}:
     get:
+      operationId: getUser
       description: Get user information
       security:
         - OAuth2: [read_assigned]
@@ -410,30 +411,31 @@ paths:
 
   /users/{userId}/avatar:
     get:
-        description: Get user avatar
-        security:
-          - OAuth2: [read_assigned]
-          - OAuth2: [read_other]
-        parameters:
-          - in: path
-            name: userId
-            schema:
-              type: integer
-              format: int64
-            required: true
-            description: Id of the user
-        responses:
-          '200':
-            description: Return user avatar
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ImageData'
-          '401': 
-            $ref: '#/components/responses/Unauthorized'
-          '403':
-            $ref: '#/components/responses/Forbidden'
-          '404':
-            $ref: '#/components/responses/NotFound'
-          default:
-            $ref: '#/components/responses/Unknown'
+      operationId: getUserAvatar
+      description: Get user avatar
+      security:
+        - OAuth2: [read_assigned]
+        - OAuth2: [read_other]
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Id of the user
+      responses:
+        '200':
+          description: Return user avatar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageData'
+        '401': 
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/Unknown'
